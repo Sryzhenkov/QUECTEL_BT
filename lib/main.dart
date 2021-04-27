@@ -17,7 +17,9 @@ class SensorListApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: "Sensor Configurator",
-        home: HomePage(),
+        home: SafeArea(
+          child: HomePage(),
+        ),
       ),
     );
   }

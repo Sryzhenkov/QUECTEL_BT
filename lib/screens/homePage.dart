@@ -1,6 +1,8 @@
 //******IMPORT******//
+import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 //*****DART_LIB*****//
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 //******MY_LIB******//
 import 'package:quectel_bt/screens/SensorListPage.dart';
 import 'package:quectel_bt/screens/NewSensorPage.dart';
@@ -16,7 +18,69 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int indexBottomTab = 0;
-  int bluetoothState = 0;
+
+  BluetoothState bluetoothState = BluetoothState.UNKNOWN;
+  FlutterBluetoothSerial bluetooth = FlutterBluetoothSerial.instance;
+  List<BluetoothDevice> devicesList = [
+    BluetoothDevice(name: 'lala', address: '00:1B:44:11:3A:B7'),
+    BluetoothDevice(name: 'lala1', address: '00:1B:44:11:3A:B7'),
+    BluetoothDevice(name: 'lala2', address: '00:1B:44:11:3A:B7')
+  ];
+
+  Future<void> enableBluetooth() async {
+    bluetoothState = await FlutterBluetoothSerial.instance.state;
+
+    if (bluetoothState == BluetoothState.STATE_OFF) {
+      await FlutterBluetoothSerial.instance.requestEnable();
+      await getPairedDevices();
+      return true;
+    } else {
+      await getPairedDevices();
+    }
+    return false;
+  }
+
+  Future<void> getPairedDevices() async {
+    List<BluetoothDevice> devices = [];
+
+    try {
+      devices = await bluetooth.getBondedDevices();
+    } on PlatformException {
+      print("Error");
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      devicesList = devices;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Get current state
+    FlutterBluetoothSerial.instance.state.then((state) {
+      setState(() {
+        bluetoothState = state;
+      });
+    });
+
+    enableBluetooth();
+
+    // Listen for further state changes
+    FlutterBluetoothSerial.instance
+        .onStateChanged()
+        .listen((BluetoothState state) {
+      setState(() {
+        bluetoothState = state;
+        getPairedDevices();
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,12 +94,17 @@ class _HomePageState extends State<HomePage> {
                 leading: Icon(Icons.account_tree),
                 actions: [
                   IconButton(
-                    icon: bluetoothState == 0
+                    padding: EdgeInsets.only(right: 20.0),
+                    icon: bluetoothState == BluetoothState.STATE_ON
                         ? Icon(Icons.bluetooth)
                         : Icon(Icons.bluetooth_disabled),
                     tooltip: 'Bluetooth on/off',
                     onPressed: () {
-                      setState(() => bluetoothState ^= 1);
+                      setState(() {
+                        bluetoothState == BluetoothState.STATE_ON
+                            ? bluetoothState = BluetoothState.STATE_OFF
+                            : bluetoothState = BluetoothState.STATE_ON;
+                      });
                     },
                   ),
                 ],
@@ -45,7 +114,9 @@ class _HomePageState extends State<HomePage> {
                 title: Text("Sensor List"),
                 leading: Icon(Icons.account_tree),
               ),
-        body: indexBottomTab == 0 ? BluetoothPage() : SensorListPage(),
+        body: indexBottomTab == 0
+            ? BluetoothPage(device: devicesList)
+            : SensorListPage(),
         floatingActionButton: indexBottomTab == 0
             ? null
             : FloatingActionButton(
