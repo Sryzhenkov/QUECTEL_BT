@@ -3,6 +3,7 @@ import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 //*****DART_LIB*****//
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:async';
 //******MY_LIB******//
 import 'package:quectel_bt/screens/SensorListPage.dart';
 import 'package:quectel_bt/screens/NewSensorPage.dart';
@@ -21,11 +22,7 @@ class _HomePageState extends State<HomePage> {
 
   BluetoothState bluetoothState = BluetoothState.UNKNOWN;
   FlutterBluetoothSerial bluetooth = FlutterBluetoothSerial.instance;
-  List<BluetoothDevice> devicesList = [
-    BluetoothDevice(name: 'lala', address: '00:1B:44:11:3A:B7'),
-    BluetoothDevice(name: 'lala1', address: '00:1B:44:11:3A:B7'),
-    BluetoothDevice(name: 'lala2', address: '00:1B:44:11:3A:B7')
-  ];
+  List<BluetoothDevice> devicesList = [];
 
   Future<void> enableBluetooth() async {
     bluetoothState = await FlutterBluetoothSerial.instance.state;
@@ -62,7 +59,6 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
 
-    // Get current state
     FlutterBluetoothSerial.instance.state.then((state) {
       setState(() {
         bluetoothState = state;
@@ -71,7 +67,6 @@ class _HomePageState extends State<HomePage> {
 
     enableBluetooth();
 
-    // Listen for further state changes
     FlutterBluetoothSerial.instance
         .onStateChanged()
         .listen((BluetoothState state) {
@@ -95,15 +90,25 @@ class _HomePageState extends State<HomePage> {
                 actions: [
                   IconButton(
                     padding: EdgeInsets.only(right: 20.0),
-                    icon: bluetoothState == BluetoothState.STATE_ON
-                        ? Icon(Icons.bluetooth)
-                        : Icon(Icons.bluetooth_disabled),
+                    icon: bluetoothState == BluetoothState.STATE_OFF
+                        ? Icon(Icons.bluetooth_disabled)
+                        : Icon(Icons.bluetooth),
                     tooltip: 'Bluetooth on/off',
                     onPressed: () {
-                      setState(() {
-                        bluetoothState == BluetoothState.STATE_ON
-                            ? bluetoothState = BluetoothState.STATE_OFF
-                            : bluetoothState = BluetoothState.STATE_ON;
+                      future() async {
+                        if (bluetoothState == BluetoothState.STATE_OFF) {
+                          await FlutterBluetoothSerial.instance.requestEnable();
+                        } else {
+                          await FlutterBluetoothSerial.instance
+                              .requestDisable();
+                        }
+                        bluetoothState == BluetoothState.STATE_OFF
+                            ? bluetoothState = BluetoothState.STATE_ON
+                            : bluetoothState = BluetoothState.STATE_OFF;
+                      }
+
+                      future().then((_) {
+                        setState(() {});
                       });
                     },
                   ),

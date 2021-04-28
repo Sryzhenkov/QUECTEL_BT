@@ -1,18 +1,5 @@
 import 'package:flutter/material.dart';
 
-// int globalID;
-// int sensorID;
-// String viewFunction;
-// int size;
-// String transFunction;
-// String sensorFunction;
-// String modeFunction;
-// String name;
-// String ipsName;
-// int value;
-// int upperLimit;
-// int lowerLimit;
-
 var sensorProperties = [
   'globalID',
   'sensorID',
