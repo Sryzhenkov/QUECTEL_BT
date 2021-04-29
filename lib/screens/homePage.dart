@@ -22,7 +22,9 @@ class _HomePageState extends State<HomePage> {
 
   BluetoothState bluetoothState = BluetoothState.UNKNOWN;
   FlutterBluetoothSerial bluetooth = FlutterBluetoothSerial.instance;
-  List<BluetoothDevice> devicesList = [];
+  List<BluetoothDevice> devicesList = [
+    BluetoothDevice(name: 'adas', address: '50:46:5D:6E:8C:20')
+  ];
 
   Future<void> enableBluetooth() async {
     bluetoothState = await FlutterBluetoothSerial.instance.state;

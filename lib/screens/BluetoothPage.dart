@@ -1,29 +1,63 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 
-class BluetoothPage extends StatelessWidget {
+class BluetoothPage extends StatefulWidget {
   BluetoothPage({this.device});
   List<BluetoothDevice> device = [];
+  @override
+  _BluetoothPageState createState() => _BluetoothPageState();
+}
+
+class _BluetoothPageState extends State<BluetoothPage> {
+  BluetoothConnection connection;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       color: Colors.white,
       child: ListView.builder(
-          itemCount: device.length,
+          itemCount: widget.device.length,
           itemBuilder: (contex, i) {
             return Card(
               elevation: 2.0,
               child: Container(
                 color: Colors.grey[200],
                 child: ListTile(
-                  title: Text(device[i].name),
-                  subtitle: Text(device[i].address),
-                  trailing: Icon(Icons.bluetooth_connected),
+                  title: Text(widget.device[i].name),
+                  subtitle: Text(widget.device[i].address),
+                  trailing: ElevatedButton(
+                    child: Icon(Icons.bluetooth_connected),
+                    onPressed: () {
+                      connect(widget.device[i]);
+                    },
+                  ),
                 ),
               ),
             );
           }),
     );
+  }
+
+  void connect(BluetoothDevice dev) async {
+    await BluetoothConnection.toAddress(dev.address).then((_connection) {
+      print('Connected to the device');
+      connection = _connection;
+      setState(() {});
+
+      connection.input.listen(null).onDone(() {
+        // if (isDisconnecting) {
+        //   print('Disconnecting locally!');
+        // } else {
+        //   print('Disconnected remotely!');
+        // }
+        if (this.mounted) {
+          setState(() {});
+        }
+      });
+    }).catchError((error) {
+      print('Cannot connect, exception occurred');
+      print(error);
+    });
+    //show('Device connected');
   }
 }
