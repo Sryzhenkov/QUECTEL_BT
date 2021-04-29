@@ -10,6 +10,7 @@ class BluetoothPage extends StatefulWidget {
 
 class _BluetoothPageState extends State<BluetoothPage> {
   BluetoothConnection connection;
+  List<bool> connectColor = [];
 
   @override
   Widget build(BuildContext context) {
@@ -18,17 +19,19 @@ class _BluetoothPageState extends State<BluetoothPage> {
       child: ListView.builder(
           itemCount: widget.device.length,
           itemBuilder: (contex, i) {
+            connectColor.add(false);
             return Card(
               elevation: 2.0,
               child: Container(
-                color: Colors.grey[200],
+                color:
+                    connectColor[i] == false ? Colors.grey[200] : Colors.grey,
                 child: ListTile(
                   title: Text(widget.device[i].name),
                   subtitle: Text(widget.device[i].address),
                   trailing: ElevatedButton(
                     child: Icon(Icons.bluetooth_connected),
                     onPressed: () {
-                      connect(widget.device[i]);
+                      connect(widget.device[i], i);
                     },
                   ),
                 ),
@@ -38,9 +41,10 @@ class _BluetoothPageState extends State<BluetoothPage> {
     );
   }
 
-  void connect(BluetoothDevice dev) async {
+  void connect(BluetoothDevice dev, int i) async {
     await BluetoothConnection.toAddress(dev.address).then((_connection) {
       print('Connected to the device');
+
       connection = _connection;
       setState(() {});
 
@@ -58,6 +62,6 @@ class _BluetoothPageState extends State<BluetoothPage> {
       print('Cannot connect, exception occurred');
       print(error);
     });
-    //show('Device connected');
+    connectColor[i] ^= true;
   }
 }
